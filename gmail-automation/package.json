@@ -1,69 +1,28 @@
-name: Daily Gmail Insights Curation
-
-on:
-  schedule:
-    # Run at 6:00 AM GMT every day
-    - cron: '0 6 * * *'
-  
-  # Allow manual trigger for testing
-  workflow_dispatch:
-
-jobs:
-  curate-insights:
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: gmail-automation/package-lock.json
-
-      - name: Install dependencies
-        run: |
-          cd gmail-automation
-          npm ci
-
-      - name: Create credentials file
-        run: |
-          cd gmail-automation
-          echo '${{ secrets.GOOGLE_OAUTH_CREDENTIALS }}' > credentials.json
-
-      - name: Restore token
-        uses: actions/cache@v3
-        with:
-          path: gmail-automation/token.json
-          key: gmail-oauth-token-${{ github.run_id }}
-          restore-keys: |
-            gmail-oauth-token-
-
-      - name: Process Gmail inbox
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          GOOGLE_SHEETS_SPREADSHEET_ID: ${{ secrets.GOOGLE_SHEETS_SPREADSHEET_ID }}
-        run: |
-          cd gmail-automation
-          node process-gmail.js
-
-      - name: Save token
-        if: always()
-        uses: actions/cache/save@v3
-        with:
-          path: gmail-automation/token.json
-          key: gmail-oauth-token-${{ github.run_id }}
-
-      - name: Send notification on failure
-        if: failure()
-        run: |
-          echo "Gmail curation failed! Check the logs above."
-          # Add email/Slack notification here if desired
-
-      - name: Summary
-        if: success()
-        run: |
-          echo "✓ Gmail curation completed successfully!"
-          echo "Check your Google Sheet for new insights in the Draft Queue tab."
+{
+  "name": "ai-insights-gmail-automation",
+  "version": "1.0.0",
+  "description": "Automated AI insights curation from Gmail inbox",
+  "main": "process-gmail.js",
+  "scripts": {
+    "auth": "node auth-setup.js",
+    "process": "node process-gmail.js",
+    "test": "node test-connection.js"
+  },
+  "keywords": [
+    "gmail",
+    "automation",
+    "ai",
+    "curation",
+    "claude"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.24.0",
+    "googleapis": "^128.0.0",
+    "open": "^9.1.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
