@@ -1,5 +1,6 @@
 name: Daily Gmail Insights Curation
 
+
 on:
   schedule:
     - cron: '0 6 * * *'
